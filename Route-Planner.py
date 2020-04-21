@@ -1,4 +1,5 @@
 import math
+from queue import PriorityQueue
 map_10 = {}
 map_10["intersections"] = {0: [0.7798606835438107, 0.6922727646627362],
  1: [0.7647837074641568, 0.3252670836724646],
@@ -102,7 +103,7 @@ map_40["roads"] = [[36, 34, 31, 28, 17],
  [23, 29, 32],
  [2, 4, 7, 22, 28, 36]]
 
-def distance_between_coordinates(point1, point2):
+def calculate_distance(point1, point2):
     x_diff = point2[0] - point1[0]
     y_diff = point2[1] - point1[1]
     distance = math.sqrt(x_diff*x_diff + y_diff*y_diff)
@@ -111,38 +112,38 @@ def distance_between_coordinates(point1, point2):
 def shortest_path(map, start, goal):
     intersections = map["intersections"]
     roads = map["roads"]
-    distance_dict = {}
-    visited_nodes = []
-    frontier = [start]
-    current_node = start
-    next_node = current_node
-    next_node_dist = 9999999999
 
-    while len(frontier) > 0:
+    frontier = PriorityQueue()
+    frontier.put(0, start)
+    explored = []
+    distance_from_start = {start: 0}
+    prev = {start: None}
+    distance_frontier = {0: start}
+
+    while not frontier.empty():
+        shortest_distance = frontier.get()
+        current_node = distance_frontier[shortest_distance]
         for node in roads[current_node]:
-            frontier.append(node) #adding node to the frontier 
+            g = distance_from_start[current_node] + calculate_distance(intersections[node], intersections[current_node])
+            h = calculate_distance(intersections[node], intersections[goal])
+            f = g+h
+            if node not in distance_from_start:
+                frontier.put(f, node)
+                distance_frontier[f] = node
+                distance_from_start[node] = g
+                prev[node] = current_node
+    # print(prev)
+    return get_path(prev, start, goal)
 
-            path_dist = distance_between_coordinates(intersections[node], intersections[current_node])
-            rest_estimated_distance = distance_between_coordinates(intersections[node], intersections[goal])
-            if path_dist + rest_estimated_distance < next_node_dist:
-                next_node_dist = path_dist + rest_estimated_distance 
-                # print(path_dist + rest_estimated_distance )
-                next_node = node
-            distance_name = str(current_node)+">>"+str(node)
-            distance_dict[distance_name] = path_dist
-        visited_nodes.append(current_node) # adding current_node in visited_nodes
+def get_path(prev, start, goal):
+    path = [goal]
+    node = goal
+    while prev[node] != None:
+        path.append(prev[node])
+        node = prev[node]
+    path.reverse()
+    return path
 
-        # removing the nodes which are visited from frontier
-        frontier.remove(current_node)
 
-        # If the goal node is removed from frontier then break
-        if current_node == goal:
-            break 
-
-        current_node = next_node
-    return visited_nodes
-
-# print(shortest_path(map_40, 5, 34))
-# print("Pass" if shortest_path(map_40, 5, 34) == [5, 16, 37, 12, 34] else "Fail")
-print(shortest_path(map_40, 8, 24))
-# [8, 14, 16, 37, 12, 17, 10, 24]
+print("Pass" if shortest_path(map_40, 5, 34) == [5, 16, 37, 12, 34] else "Fail")
+print("Pass" if shortest_path(map_40, 8, 24) == [8, 14, 16, 37, 12, 17, 10, 24] else "Fail")
