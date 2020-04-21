@@ -126,8 +126,8 @@ def shortest_path(map, start, goal):
         for node in roads[current_node]:
             g = distance_from_start[current_node] + calculate_distance(intersections[node], intersections[current_node])
             h = calculate_distance(intersections[node], intersections[goal])
-            f = g+h
-            if node not in distance_from_start:
+            if node not in distance_from_start or g < distance_from_start[node]:
+                f = g+h
                 frontier.put(f, node)
                 distance_frontier[f] = node
                 distance_from_start[node] = g
